@@ -32,7 +32,7 @@ if detection_mode == "🖼️ Image Detection":
 
     if uploaded_file is not None:
         image = Image.open(uploaded_file)
-        st.image(image, caption='Uploaded Image', use_column_width=True)
+        st.image(image, caption='Uploaded Image', use_container_width=True)  # Updated to use_container_width
         st.write("Detecting...")
 
         # Perform inference
@@ -45,7 +45,7 @@ if detection_mode == "🖼️ Image Detection":
         annotated_image_rgb = cv2.cvtColor(annotated_image, cv2.COLOR_BGR2RGB)
 
         # Display annotated image in Streamlit
-        st.image(annotated_image_rgb, caption='Detected Image', use_column_width=True)
+        st.image(annotated_image_rgb, caption='Detected Image', use_container_width=True)  # Updated to use_container_width
 
         # Get detected classes (detected gear)
         detected_classes = [model.names[int(cls)] for cls in results[0].boxes.cls.cpu().numpy()]
@@ -140,15 +140,19 @@ elif detection_mode == "🎥 Video Detection":
             missing_classes = list(missing_classes_set)
             st.warning(f"⚠️ Missing Safety Gear: {', '.join(missing_classes)}", icon="⚠️")
 
-        # Update session state to indicate processing is complete
-        st.session_state.video_processed = True
+        # Ensure the output video exists before providing a download link
+        if os.path.exists(output_path):
+            # Update session state to indicate processing is complete
+            st.session_state.video_processed = True
 
-    # Display the download button only if processing is complete
-    if st.session_state.video_processed:
-        with open(output_path, "rb") as f:
-            st.download_button(
-                label="Download Processed Video",
-                data=f,
-                file_name="detected_video.mp4",
-                mime="video/mp4"
-            )
+        # Display the download button only if processing is complete
+        if st.session_state.video_processed:
+            with open(output_path, "rb") as f:
+                st.download_button(
+                    label="Download Processed Video",
+                    data=f,
+                    file_name="detected_video.mp4",
+                    mime="video/mp4"
+                )
+        else:
+            st.error("Video processing failed. Please try again.")
